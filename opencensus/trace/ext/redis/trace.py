@@ -106,13 +106,12 @@ def _patch_client(client):
 
 
 def _patch_pipe_execute(pipe):
-    tracer = execution_context.get_opencensus_tracer()
-
     # Patch the execute() method.
     execute_method = pipe.execute
 
     @wraps(execute_method)
     def tracing_execute(raise_on_error=True):
+        tracer = execution_context.get_opencensus_tracer()
         if not pipe.command_stack:
             # Nothing to process/handle.
             return execute_method(raise_on_error=raise_on_error)
@@ -144,13 +143,12 @@ def _patch_pubsub(pubsub):
 
 
 def _patch_pubsub_parse_response(pubsub):
-    tracer = execution_context.get_opencensus_tracer()
-
     # Patch the parse_response() method.
     parse_response_method = pubsub.parse_response
 
     @wraps(parse_response_method)
     def tracing_parse_response(block=True, timeout=0):
+        tracer = execution_context.get_opencensus_tracer()
         with tracer.start_span('[{}]{}'.format(MODULE_NAME, 'SUB')) as span:
             _set_base_span_tags(span, '')
             rv = parse_response_method(block=block, timeout=timeout)
@@ -161,8 +159,6 @@ def _patch_pubsub_parse_response(pubsub):
 
 
 def _patch_obj_execute_command(redis_obj, is_klass=False):
-    tracer = execution_context.get_opencensus_tracer()
-
     execute_command_method = redis_obj.execute_command
 
     @wraps(execute_command_method)
@@ -175,6 +171,7 @@ def _patch_obj_execute_command(redis_obj, is_klass=False):
 
         command = reported_args[0]
 
+        tracer = execution_context.get_opencensus_tracer()
         with tracer.start_span('[{}]{}'.format(MODULE_NAME, command)) as span:
             _set_base_span_tags(span, _normalize_stmt(reported_args))
             rv = execute_command_method(*args, **kwargs)
