@@ -98,9 +98,15 @@ def wrap_apply_async(apply_async_func):
             _tracer.span_context
         )
         wrapped_kwargs["kwds"] = kwds
-        wrapped_kwargs["sampler"] = _tracer.sampler
-        wrapped_kwargs["exporter"] = _tracer.exporter
-        wrapped_kwargs["propagator"] = _tracer.propagator
+        sampler = getattr(_tracer, 'sampler', None)
+        if sampler:
+            wrapped_kwargs["sampler"] = sampler
+        exporter = getattr(_tracer, 'exporter', None)
+        if exporter:
+            wrapped_kwargs["exporter"] = exporter
+        propagator = getattr(_tracer, 'propagator', None)
+        if propagator:
+            wrapped_kwargs["propagator"] = propagator
 
         return apply_async_func(
             self, wrapped_func, args=args, kwds=wrapped_kwargs, **kwargs
@@ -123,9 +129,15 @@ def wrap_submit(submit_func):
             _tracer.span_context
         )
         wrapped_kwargs["kwds"] = kwargs
-        wrapped_kwargs["sampler"] = _tracer.sampler
-        wrapped_kwargs["exporter"] = _tracer.exporter
-        wrapped_kwargs["propagator"] = _tracer.propagator
+        sampler = getattr(_tracer, 'sampler', None)
+        if sampler:
+            wrapped_kwargs["sampler"] = sampler
+        exporter = getattr(_tracer, 'exporter', None)
+        if exporter:
+            wrapped_kwargs["exporter"] = exporter
+        propagator = getattr(_tracer, 'propagator', None)
+        if propagator:
+            wrapped_kwargs["propagator"] = propagator
 
         return submit_func(self, wrapped_func, *args, **wrapped_kwargs)
 
