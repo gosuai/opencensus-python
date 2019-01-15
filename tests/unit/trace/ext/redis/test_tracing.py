@@ -49,7 +49,7 @@ class TestTracing(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'GET'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'GET my.key',
+            'redis.statement': 'GET ?',
         })
 
     def test_trace_unicode_key(self):
@@ -59,7 +59,7 @@ class TestTracing(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'GET'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'GET my.kèy',
+            'redis.statement': 'GET ?',
         })
 
     def test_trace_all_pipeline(self):
@@ -73,7 +73,7 @@ class TestTracing(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'MULTI'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'LPUSH my:keys 1 3;RPUSH my:keys 5 7',
+            'redis.statement': 'LPUSH ? ? ?;RPUSH ? ? ?',
         })
 
     def test_trace_all_pubsub(self):
@@ -86,5 +86,5 @@ class TestTracing(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'SUBSCRIBE'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'SUBSCRIBE test',
+            'redis.statement': 'SUBSCRIBE ?',
         })

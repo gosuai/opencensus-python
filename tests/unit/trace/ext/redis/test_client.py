@@ -29,7 +29,7 @@ class TestClient(unittest.TestCase):
         span = spans[0]
         self.assertEqual(spans[0].name, '[{}]{}'.format(MODULE_NAME, 'GET'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'GET my.key',
+            'redis.statement': 'GET ?',
         })
 
     def test_trace_client_pipeline(self):
@@ -42,7 +42,7 @@ class TestClient(unittest.TestCase):
         span = spans[0]
         self.assertEqual(spans[0].name, '[{}]{}'.format(MODULE_NAME, 'MULTI'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'RPUSH my:keys 1 3;RPUSH my:keys 5 7',
+            'redis.statement': 'RPUSH ? ? ?;RPUSH ? ? ?',
         })
 
     def test_trace_client_pubsub(self):
@@ -55,5 +55,5 @@ class TestClient(unittest.TestCase):
         span = spans[0]
         self.assertEqual(spans[0].name, '[{}]{}'.format(MODULE_NAME, 'SUBSCRIBE'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'SUBSCRIBE test',
+            'redis.statement': 'SUBSCRIBE ?',
         })

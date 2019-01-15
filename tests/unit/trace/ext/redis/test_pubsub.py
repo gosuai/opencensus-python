@@ -30,7 +30,7 @@ class TestPubSub(unittest.TestCase):
         self.assertEqual(len(spans), 1)
         self.assertEqual(spans[0].name, '[redis]SUBSCRIBE')
         self.assertEqual(spans[0].attributes, {
-            'redis.statement': 'SUBSCRIBE test',
+            'redis.statement': 'SUBSCRIBE ?',
         })
 
     def test_trace_pubsub_execute_command(self):
@@ -40,5 +40,5 @@ class TestPubSub(unittest.TestCase):
         self.assertEqual(len(spans), 1)
         self.assertEqual(spans[0].name, '[redis]GET')
         self.assertEqual(spans[0].attributes, {
-            'redis.statement': 'GET foo',
+            'redis.statement': 'GET ?',
         })

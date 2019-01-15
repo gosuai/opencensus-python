@@ -15,7 +15,6 @@ import logging
 from functools import wraps
 
 import redis
-import six
 
 from opencensus.trace import execution_context
 from opencensus.trace import span as span_module
@@ -61,11 +60,9 @@ def patch_redis_classes(client, trace_pipeline=True, trace_pubsub=True):
 
 
 def _normalize_stmt(args):
-    args_encoded = []
-    for arg in args:
-        encoded = arg.encode('utf-8') if isinstance(arg, six.string_types) else str(arg)
-        args_encoded.append(encoded)
-    return ' '.join(args_encoded)
+    stmt = [args[0]]
+    stmt.extend(['?' for arg in args[1:]])
+    return ' '.join(stmt)
 
 
 def _normalize_stmts(command_stack):
@@ -130,6 +127,7 @@ def _patch_pipe_execute(pipe):
     @wraps(immediate_execute_method)
     def tracing_immediate_execute_command(*args, **options):
         command = args[0]
+        tracer = execution_context.get_opencensus_tracer()
         with tracer.start_span('[{}]{}'.format(MODULE_NAME, command)) as span:
             _set_base_span_tags(span, _normalize_stmt(args))
             immediate_execute_method(*args, **options)

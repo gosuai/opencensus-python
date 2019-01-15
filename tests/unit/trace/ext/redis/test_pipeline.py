@@ -31,7 +31,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(len(spans), 1)
         self.assertEqual(spans[0].name, '[{}]{}'.format(MODULE_NAME, 'MULTI'))
         self.assertEqual(spans[0].attributes, {
-            'redis.statement': 'LPUSH my:keys 1 3;LPUSH my:keys 5 7',
+            'redis.statement': 'LPUSH ? ? ?;LPUSH ? ? ?',
         })
 
     def test_trace_pipeline_empty(self):
@@ -48,7 +48,7 @@ class TestPipeline(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'WATCH'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'WATCH my:key',
+            'redis.statement': 'WATCH ?',
         })
 
     def test_trace_pipeline_error(self):
@@ -67,5 +67,5 @@ class TestPipeline(unittest.TestCase):
         span = spans[0]
         self.assertEqual(span.name, '[{}]{}'.format(MODULE_NAME, 'MULTI'))
         self.assertEqual(span.attributes, {
-            'redis.statement': 'LPUSH my:keys 1 3;LPUSH my:keys 5 7',
+            'redis.statement': 'LPUSH ? ? ?;LPUSH ? ? ?',
         })
