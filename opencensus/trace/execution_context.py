@@ -76,7 +76,7 @@ def set_current_span(current_span):
 
 
 def add_current_span_set_callback(cb):
-    # type: (Callable[[Span], None]) -> None
+    # type: (Callable[[Union[Span, None]], None]) -> None
     global _span_created_callbacks
     _span_created_callbacks.append(cb)
 
