@@ -14,8 +14,12 @@
 
 import threading
 
+from typing import Callable
+
+from opencensus.trace import Span
 from opencensus.trace.tracers import noop_tracer
 
+_span_created_callbacks = []
 _thread_local = threading.local()
 
 
@@ -64,7 +68,17 @@ def get_current_span():
 
 
 def set_current_span(current_span):
+    global _span_created_callbacks
+    for cb in _span_created_callbacks:
+        cb(current_span)
+
     setattr(_get_context(), 'current_span', current_span)
+
+
+def add_current_span_set_callback(cb):
+    # type: (Callable[[Span], None]) -> None
+    global _span_created_callbacks
+    _span_created_callbacks.append(cb)
 
 
 def get_opencensus_full_context():
