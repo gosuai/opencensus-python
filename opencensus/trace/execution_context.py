@@ -14,36 +14,44 @@
 
 import threading
 
+from typing import Callable
+
+from opencensus.trace import Span
 from opencensus.trace.tracers import noop_tracer
 
+_span_created_callbacks = []
 _thread_local = threading.local()
+
+
+def _get_context():
+    return _thread_local
 
 
 def get_opencensus_tracer():
     """Get the opencensus tracer from thread local."""
-    return getattr(_thread_local, 'tracer', noop_tracer.NoopTracer())
+    return getattr(_get_context(), 'tracer', noop_tracer.NoopTracer())
 
 
 def set_opencensus_tracer(tracer):
     """Add the tracer to thread local."""
-    setattr(_thread_local, 'tracer', tracer)
+    setattr(_get_context(), 'tracer', tracer)
 
 
 def set_opencensus_attr(attr_key, attr_value):
     # If there is no attrs, initialize it to empty dict.
-    attrs = getattr(_thread_local, 'attrs', {})
+    attrs = getattr(_get_context(), 'attrs', {})
 
     attrs[attr_key] = attr_value
 
-    setattr(_thread_local, 'attrs', attrs)
+    setattr(_get_context(), 'attrs', attrs)
 
 
 def set_opencensus_attrs(attrs):
-    setattr(_thread_local, 'attrs', attrs)
+    setattr(_get_context(), 'attrs', attrs)
 
 
 def get_opencensus_attr(attr_key):
-    attrs = getattr(_thread_local, 'attrs', None)
+    attrs = getattr(_get_context(), 'attrs', None)
 
     if attrs is not None:
         return attrs.get(attr_key)
@@ -52,15 +60,25 @@ def get_opencensus_attr(attr_key):
 
 
 def get_opencensus_attrs():
-    return getattr(_thread_local, 'attrs', None)
+    return getattr(_get_context(), 'attrs', None)
 
 
 def get_current_span():
-    return getattr(_thread_local, 'current_span', None)
+    return getattr(_get_context(), 'current_span', None)
 
 
 def set_current_span(current_span):
-    setattr(_thread_local, 'current_span', current_span)
+    global _span_created_callbacks
+    for cb in _span_created_callbacks:
+        cb(current_span)
+
+    setattr(_get_context(), 'current_span', current_span)
+
+
+def add_current_span_set_callback(cb):
+    # type: (Callable[[Union[Span, None]], None]) -> None
+    global _span_created_callbacks
+    _span_created_callbacks.append(cb)
 
 
 def get_opencensus_full_context():
@@ -80,13 +98,13 @@ def set_opencensus_full_context(tracer, span, attrs):
 
 
 def clean():
-    setattr(_thread_local, 'attrs', {})
-    if hasattr(_thread_local, 'current_span'):
-        delattr(_thread_local, 'current_span')
-    if hasattr(_thread_local, 'tracer'):
-        delattr(_thread_local, 'tracer')
+    setattr(_get_context(), 'attrs', {})
+    if hasattr(_get_context(), 'current_span'):
+        delattr(_get_context(), 'current_span')
+    if hasattr(_get_context(), 'tracer'):
+        delattr(_get_context(), 'tracer')
 
 
 def clear():
     """Clear the thread local, used in test."""
-    _thread_local.__dict__.clear()
+    _get_context().__dict__.clear()

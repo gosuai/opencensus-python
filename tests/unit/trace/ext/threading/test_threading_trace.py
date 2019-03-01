@@ -20,6 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from opencensus.trace.ext.threading import trace
 from opencensus.trace import execution_context, tracer
+from opencensus.trace.tracers.noop_tracer import NoopTracer
 
 
 class Test_threading_trace(unittest.TestCase):
@@ -119,6 +120,19 @@ class Test_threading_trace(unittest.TestCase):
             result = future.result()
 
         self.assertEqual(result, context.trace_id)
+
+    def test_handles_noop(self):
+        trace.trace_integration()
+
+        def assert_noop():
+            _tracer = execution_context.get_opencensus_tracer()
+            self.assertTrue(isinstance(_tracer, NoopTracer))
+            return _tracer.span_context.trace_id
+
+        pool = ThreadPoolExecutor(max_workers=1)
+        with execution_context.get_opencensus_tracer().span(name='span1'):
+            future = pool.submit(assert_noop)
+            future.result()
 
     def fake_threaded_func(self):
         global global_tracer

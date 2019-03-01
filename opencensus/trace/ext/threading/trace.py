@@ -20,6 +20,7 @@ from concurrent import futures
 from opencensus.trace import execution_context
 from opencensus.trace import tracer
 from opencensus.trace.propagation import binary_format
+from opencensus.trace.tracers.noop_tracer import NoopTracer
 
 log = logging.getLogger(__name__)
 
@@ -98,9 +99,10 @@ def wrap_apply_async(apply_async_func):
             _tracer.span_context
         )
         wrapped_kwargs["kwds"] = kwds
-        wrapped_kwargs["sampler"] = _tracer.sampler
-        wrapped_kwargs["exporter"] = _tracer.exporter
-        wrapped_kwargs["propagator"] = _tracer.propagator
+        if not isinstance(_tracer, NoopTracer):
+            wrapped_kwargs["sampler"] = _tracer.sampler
+            wrapped_kwargs["exporter"] = _tracer.exporter
+            wrapped_kwargs["propagator"] = _tracer.propagator
 
         return apply_async_func(
             self, wrapped_func, args=args, kwds=wrapped_kwargs, **kwargs
@@ -119,13 +121,14 @@ def wrap_submit(submit_func):
         propagator = binary_format.BinaryFormatPropagator()
 
         wrapped_kwargs = {}
-        wrapped_kwargs["span_context_binary"] = propagator.to_header(
-            _tracer.span_context
-        )
         wrapped_kwargs["kwds"] = kwargs
-        wrapped_kwargs["sampler"] = _tracer.sampler
-        wrapped_kwargs["exporter"] = _tracer.exporter
-        wrapped_kwargs["propagator"] = _tracer.propagator
+        if not isinstance(_tracer, NoopTracer):
+            wrapped_kwargs["span_context_binary"] = propagator.to_header(
+                _tracer.span_context
+            )
+            wrapped_kwargs["sampler"] = _tracer.sampler
+            wrapped_kwargs["exporter"] = _tracer.exporter
+            wrapped_kwargs["propagator"] = _tracer.propagator
 
         return submit_func(self, wrapped_func, *args, **wrapped_kwargs)
 
@@ -141,14 +144,15 @@ class wrap_task_func(object):
 
     def __call__(self, *args, **kwargs):
         kwds = kwargs.pop("kwds")
-
-        span_context_binary = kwargs.pop("span_context_binary")
-        propagator = binary_format.BinaryFormatPropagator()
-        kwargs["span_context"] = propagator.from_header(span_context_binary)
-
-        _tracer = tracer.Tracer(**kwargs)
-        execution_context.set_opencensus_tracer(_tracer)
-        with _tracer.span(name=threading.current_thread().name):
+        if 'sampler' in kwds:
+            span_context_binary = kwargs.pop("span_context_binary")
+            propagator = binary_format.BinaryFormatPropagator()
+            kwargs["span_context"] = propagator.from_header(span_context_binary)
+            _tracer = tracer.Tracer(**kwargs)
+            execution_context.set_opencensus_tracer(_tracer)
+            with _tracer.span(name=threading.current_thread().name):
+                result = self.func(*args, **kwds)
+        else:
             result = self.func(*args, **kwds)
         execution_context.clean()
         return result

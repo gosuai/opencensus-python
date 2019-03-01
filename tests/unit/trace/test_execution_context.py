@@ -97,3 +97,12 @@ class Test__get_opencensus_attr(unittest.TestCase):
         self.assertNotEqual(mock_span, execution_context.get_current_span())
         self.assertEqual(some_value, getattr(thread_local,
                                              'random_non_oc_attr'))
+
+    def test_span_callbacks(self):
+        cb = mock.Mock()
+        execution_context.add_current_span_set_callback(cb)
+
+        mock_span = mock.Mock()
+        execution_context.set_current_span(mock_span)
+
+        cb.assert_called_once_with(mock_span)
