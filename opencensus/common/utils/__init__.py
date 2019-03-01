@@ -24,7 +24,7 @@ import weakref
 UTF8 = 'utf-8'
 
 # Max length is 128 bytes for a truncatable string.
-MAX_LENGTH = 128
+MAX_LENGTH = 1024
 
 ISO_DATETIME_REGEX = '%Y-%m-%dT%H:%M:%S.%fZ'
 
