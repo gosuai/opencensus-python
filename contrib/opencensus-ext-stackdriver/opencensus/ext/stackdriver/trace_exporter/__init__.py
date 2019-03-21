@@ -85,6 +85,8 @@ def set_monitored_resource_attributes(span):
 
         if resource_type == 'gke_container':
             resource_type = 'k8s_container'
+
+        if resource_type == 'k8s_container':
             set_attribute_label(span, resource_type, resource_labels,
                                 'project_id')
             set_attribute_label(span, resource_type, resource_labels,
